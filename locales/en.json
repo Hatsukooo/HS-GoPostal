@@ -7,5 +7,5 @@
 "JobStarted": "Začal jsi svou službu! \n  jeď na určené místo a vyzvedni všechny balíčky \n Místo určené najdeš na mapě!",
 "JobEnded": "Ukončil jsi svou službu, jdi k pánovi na schodech, ten ti dá tvou odměnu! ",
  "CollectPack": "Vyzvedni balíky",
- "have_boxes": "You currently have %s package/s"
+ "have_boxes": "You currently have %s package/s in your truck"
 }
