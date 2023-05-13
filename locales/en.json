@@ -1,0 +1,9 @@
+{
+"NotifyTitle": "Práce",
+"Duty_On": "Zapsal jsi si příchod do služby",
+"Duty_Off": "Zapsal jsi si odchod ze služby",
+"JobVehOut": "Vytáhl jsi firemní vozidlo, pokus se ho nezničit!",
+"SpawnPointOccupied": "Nemůžeš vozidlo vytáhnout - \n místo je obsazeno",
+"JobStarted": "Začal jsi svou službu! \n  jeď na určené místo a vyzvedni všechny balíčky \n Místo určené najdeš na mapě!",
+"JobEnded": "Ukončil jsi svou službu, jdi k pánovi na schodech, ten ti dá tvou odměnu! ",
+}
