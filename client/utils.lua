@@ -22,4 +22,10 @@ end
 
 Citizen.CreateThread(function()
  CreatePeds()
+ exports['blips']:addBlip('delivblip', 'GoPostal Sídlo', vec3(90.7632, 130.9322, 116.7332),{
+ 					blip = 441,
+ 					type = 4,
+ 					scale = 1.0,
+ 					color = 2,
+ 					})
 end)

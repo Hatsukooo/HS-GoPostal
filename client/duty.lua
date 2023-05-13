@@ -1,37 +1,8 @@
 local onDuty = true
-local carout = false
-local Rozvor = false
-RegisterNetEvent('HS-Job:Duty', function()
-FreezeEntityPosition(PlayerPedId(), true)
-    lib.progressBar({
-        duration = 2500,
-        label = 'Zapisuješ se do služby',
-        useWhileDead = false,
-        canCancel = false,
-        disable = {
-            car = true,
-        },
-    })
-    FreezeEntityPosition(PlayerPedId(), false)
-    exports['okokNotify']:Alert(locale('NotifyTitle'), locale('Duty_On'), 2500, 'info')
-    onDuty = true
-end)
-
-RegisterNetEvent('HS-Job:OffDuty', function()
-FreezeEntityPosition(PlayerPedId(), true)
-    lib.progressBar({
-        duration = 2500,
-        label = 'Zapisuješ si odchod ze služby',
-        useWhileDead = false,
-        canCancel = false,
-        disable = {
-            car = true,
-        },
-    })
-    FreezeEntityPosition(PlayerPedId(), false)
-    exports['okokNotify']:Alert(locale('NotifyTitle'), locale('Duty_Off'), 2500, 'info')
-    onDuty = true
-end)
+local carout = true
+local balik = false
+local rozvoz = true
+local BoxCount = 0
 
 
 function DeleteNearestVehicle()
@@ -107,12 +78,11 @@ local OptionsCar = {
            icon = 'fa-solid fa-box',
            distance = 1.0,
            canInteract = function()
-               return onDuty and carout and not rozvor
+               return onDuty and carout and not rozvoz
            end,
           onSelect =  function(data)
-            rozvor = true
+            rozvoz = true
             exports['okokNotify']:Alert(locale('NotifyTitle'), locale('JobStarted'), 5000, 'info')
-           SelectBlipOnMap()
           end
        },
       {
@@ -120,10 +90,10 @@ local OptionsCar = {
           icon = 'fa-solid fa-box',
           distance = 1.0,
           canInteract = function()
-              return onDuty and carout and  rozvor
+              return onDuty and carout and  rozvoz
           end,
          onSelect =  function(data)
-            rozvor = false
+            rozvoz = false
             exports['okokNotify']:Alert(locale('NotifyTitle'), locale('JobEnded'), 5000, 'info')
          end
       },
@@ -137,18 +107,113 @@ local OptionsDuty = {
             distance = 1.0,
             canInteract = function()
                 return not onDuty
+            end,
+            onSelect = function(data)
+            FreezeEntityPosition(PlayerPedId(), true)
+                lib.progressBar({
+                    duration = 2500,
+                    label = 'Zapisuješ se do služby',
+                    useWhileDead = false,
+                    canCancel = false,
+                    disable = {
+                        car = true,
+                    },
+                })
+                FreezeEntityPosition(PlayerPedId(), false)
+                exports['okokNotify']:Alert(locale('NotifyTitle'), locale('Duty_On'), 2500, 'info')
+                onDuty = true
             end
         },
         {
-            event = 'HS-Job:OffDuty',
             icon = 'fa-solid fa-user',
             label = 'Odejít ze služby',
             distance = 1.0,
             canInteract = function()
                 return onDuty
+            end,
+            onSelect = function(data)
+                FreezeEntityPosition(PlayerPedId(), true)
+                    lib.progressBar({
+                        duration = 2500,
+                        label = 'Zapisuješ si odchod ze služby',
+                        useWhileDead = false,
+                        canCancel = false,
+                        disable = {
+                            car = true,
+                        },
+                    })
+                    FreezeEntityPosition(PlayerPedId(), false)
+                    exports['okokNotify']:Alert(locale('NotifyTitle'), locale('Duty_Off'), 2500, 'info')
+                    onDuty = false
             end
         }
 }
+
+local OptionsToCar = {
+        {
+            label = 'Vložit Balíček do vozidla',
+            icon = 'fa-solid fa-user',
+            distance = 1.0,
+            canInteract = function()
+                 return  onDuty and carout and  balik
+            end,
+            onSelect = function(data)
+                 balik = false
+                 lib.progressBar({
+                                   duration = 2000,
+                                   label = 'Vkládáš balíček do vozidla',
+                                   useWhileDead = false,
+                                   canCancel = false,
+                                   disable = {
+                                       car = true,
+                                   },
+                                   anim = {
+                                       dict = 'mini@repair',
+                                       clip = 'fixing_a_ped'
+                                   },
+                               })
+                               DeleteEntity(boxProp)
+                               BoxCount = BoxCount + 1
+                               lib.showTextUI(locale('have_boxes', BoxCount))
+            end
+        }
+}
+
+local OptionsVzitBalik = {
+        {
+            label = 'Vzít balík',
+            icon = 'fa-solid fa-box',
+            distance = 1.0,
+            canInteract = function()
+                return  onDuty and carout and not balik
+            end,
+           onSelect =  function(data)
+              balik = true
+              lib.progressBar({
+                  duration = 2000,
+                  label = 'Přebíráš balík',
+                  useWhileDead = false,
+                  canCancel = false,
+                  disable = {
+                      car = true,
+                  },
+                  anim = {
+                      dict = 'mini@repair',
+                      clip = 'fixing_a_ped'
+                  },
+              })
+                     lib.requestAnimDict('anim@heists@box_carry@', 1000)
+
+                      TaskPlayAnim(PlayerPedId(), 'anim@heists@box_carry@', 'idle', 2.0, 2.5, -1, 49, 0, 0, 0, 0)
+
+                      lib.requestModel('prop_cs_cardbox_01', 1000)
+
+                      boxProp = CreateObject(GetHashKey('prop_cs_cardbox_01'), x, y, z, true, true, true)
+                      AttachEntityToEntity(boxProp, PlayerPedId(), GetPedBoneIndex(PlayerPedId(), 0x60F2), -0.1, 0.4, 0, 0, 90.0, 0, true, true, false, true, 5, true)
+              end
+        },
+}
+local baliktoauto = exports.ox_target:addGlobalVehicle(OptionsToCar)
 
 local duty   = exports.ox_target:addBoxZone({
     coords = vec3(-961.7448, -1981.4221, 14.4753),
@@ -166,6 +231,18 @@ local carspawn   = exports.ox_target:addBoxZone({
     options = OptionsCar
 })
 
-function SelectBlipOnMap()
+local bratbalickydoauta   = exports.ox_target:addBoxZone({
+    coords = vec3(63.7725, 130.4584, 79.63),
+    size = vec3(2, 8, 3),
+    rotation = 70,
+    debug = Config.Debug,
+    options = OptionsVzitBalik
+})
 
-end
+local bratbalickydoauta   = exports.ox_target:addBoxZone({
+    coords = vec3(63.7725, 130.4584, 79.63),
+    size = vec3(2, 8, 3),
+    rotation = 70,
+    debug = Config.Debug,
+    options = OptionsVzitBalik
+})
