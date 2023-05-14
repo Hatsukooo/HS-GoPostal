@@ -1,7 +1,7 @@
 local onDuty = true
 local carout = true
 local balik = false
-local rozvoz = true
+local rozvoz = false
 local BoxCount = 0
 ESX = exports["es_extended"]:getSharedObject()
 lib.locale()
@@ -9,9 +9,7 @@ lib.locale()
 function DeleteNearestVehicle()
     local vehicle = GetClosestVehicle(GetEntityCoords(PlayerPedId()), 10.0, 0, 71)
     if DoesEntityExist(vehicle) then
-        SetEntityAsMissionEntity(vehicle, true, true)
         DeleteVehicle(vehicle)
-        carout = false
         return true
     else
         return false
@@ -27,7 +25,7 @@ function SpawnVehicle(model)
     local spawnCoords = vector3(-974.3779, -1962.1353, 13.1916)
     local heading = 317.0751
     if IsAnyVehicleNearPoint(spawnCoords, 5.0) then
-    return  exports['okokNotify']:Alert(locale('NotifyTitle'), locale('SpawnPointOccupied'), 2500, 'warning')
+        return exports['okokNotify']:Alert(locale('NotifyTitle'), locale('SpawnPointOccupied'), 2500, 'warning')
     end
     RequestModel(hash)
     while not HasModelLoaded(hash) do
@@ -35,22 +33,22 @@ function SpawnVehicle(model)
     end
     local vehicle = CreateVehicle(hash, spawnCoords.x, spawnCoords.y, spawnCoords.z, heading, true, false)
     if DoesEntityExist(vehicle) then
-    SetVehicleEngineOn(vehicle, true, true)
-    SetVehicleOnGroundProperly(vehicle)
-    carout = true
-    exports['okokNotify']:Alert(locale('NotifyTitle'), locale('JobVehOut'), 2500, 'info')
+        SetVehicleEngineOn(vehicle, true, true)
+        SetVehicleOnGroundProperly(vehicle)
+        exports['okokNotify']:Alert(locale('NotifyTitle'), locale('JobVehOut'), 2500, 'info')
         Debug("Spawned vehicle with net ID: " .. tostring(NetworkGetNetworkIdFromEntity(vehicle)))
+        return true
     else
-    carout = false
         Debug("Failed to spawn vehicle.")
+        return false
     end
-
 end
 
 local OptionsCar = {
         {
             label = 'Vyparkovat služební vozidlo',
             icon = 'fa-solid fa-car',
+            groups = 'gopostal',
             distance = 1.0,
             canInteract = function()
                 return onDuty and not carout
@@ -63,6 +61,7 @@ local OptionsCar = {
         {
             label = 'Zaparkovat služební vozidlo',
             icon = 'fa-solid fa-car',
+            groups = 'gopostal',
             distance = 1.0,
             canInteract = function()
                 return onDuty and carout
@@ -72,39 +71,13 @@ local OptionsCar = {
            DeleteNearestVehicle()
            end
         },
-       {
-           label = 'Začít rozvážet balíky',
-           icon = 'fa-solid fa-box',
-           distance = 1.0,
-           canInteract = function()
-               return onDuty and carout and not rozvoz
-           end,
-          onSelect =  function(data)
-            rozvoz = true
-            exports['okokNotify']:Alert(locale('NotifyTitle'), locale('JobStarted'), 5000, 'info')
-          end
-       },
-      {
-          label = 'Přestat rozvážet',
-          icon = 'fa-solid fa-box',
-          distance = 1.0,
-          canInteract = function()
-              return onDuty and carout and  rozvoz
-          end,
-         onSelect =  function(data)
-            rozvoz = false
-            lib.hideTextUI()
-            BoxCount = 0
-            exports['okokNotify']:Alert(locale('NotifyTitle'), locale('JobEnded'), 5000, 'info')
-         end
-      },
 }
 
 local OptionsDuty = {
         {
             label = 'Jít do služby',
-            event = 'HS-Job:Duty',
             icon = 'fa-solid fa-user',
+            groups = 'gopostal',
             distance = 1.0,
             canInteract = function()
                 return not onDuty
@@ -128,6 +101,7 @@ local OptionsDuty = {
         {
             icon = 'fa-solid fa-user',
             label = 'Odejít ze služby',
+            groups = 'gopostal',
             distance = 1.0,
             canInteract = function()
                 return onDuty
@@ -150,10 +124,50 @@ local OptionsDuty = {
         }
 }
 
+Citizen.CreateThread(function()
+lib.registerContext({
+  id = 'GoPostalStartJobMenu',
+  title = 'GoPostal Menu',
+  options = {
+    {
+      title = 'Začít rozvážet lidem',
+      description = 'Rozvážej balíčky a vydělej si nějaký ten drobák',
+      icon = 'fa-money-bill',
+      arrow = true,
+      onSelect = function()
+        if not rozvoz then
+        if BoxCount > 0  then
+        rozvoz = true
+        exports['okokNotify']:Alert(locale('NotifyTitle'), "Začal jsi rozvážet balíčky", 2500, 'info')
+
+        else
+        exports['okokNotify']:Alert(locale('NotifyTitle'), "Nemáš v kufru dostatek balíčků", 2500, 'error')
+        end
+        end
+       end
+    },
+        {
+          title = 'Přestat rozvážet lidem',
+          description = '',
+          icon = 'fa-money-bill',
+          arrow = true,
+                onSelect = function()
+                    if rozvoz and BoxCount == 0  then
+                     rozvoz = false
+                     exports['okokNotify']:Alert(locale('NotifyTitle'), "Přestal jsi rozvážet balíčky", 2500, 'info')
+                     else  exports['okokNotify']:Alert(locale('NotifyTitle'), "Nemůžeš přestat rozvážet, v kufru máš ještě nějaké balíčky ty pako", 2500, 'warning')
+                    end
+                 end
+        }
+  }
+})
+end)
+
 local OptionsToCar = {
         {
             label = 'Vložit Balíček do vozidla',
             icon = 'fa-solid fa-box',
+            groups = 'gopostal',
             distance = 1.0,
             canInteract = function()
                  return  onDuty and carout and  balik
@@ -186,6 +200,7 @@ local OptionsToCar = {
                     label = 'Vybrat Balíček z vozidla',
                     icon = 'fa-solid fa-box',
                     distance = 1.0,
+                    groups = 'gopostal',
                     canInteract = function()
                          return  onDuty and carout and  not balik and BoxCount ~=0
                     end,
@@ -217,13 +232,26 @@ local OptionsToCar = {
                                        AttachEntityToEntity(boxProp, PlayerPedId(), GetPedBoneIndex(PlayerPedId(), 0x60F2), -0.1, 0.4, 0, 0, 90.0, 0, true, true, false, true, 5, true)
                                        exports.ox_target:disableTargeting(false)
                     end
-                }
+                },
+                {
+                                    label = 'GoPostal Menu',
+                                    icon = 'fa-solid fa-user',
+                                    distance = 1.0,
+                                    groups = 'gopostal',
+                                    canInteract = function()
+                                         return  onDuty and carout and  not balik
+                                    end,
+                                    onSelect = function(data)
+                                         lib.showContext("GoPostalStartJobMenu")
+                                    end
+                                }
 }
 
 local OptionsVzitBalik = {
         {
             label = 'Vzít balík',
             icon = 'fa-solid fa-box',
+            groups = 'gopostal',
             distance = 1.0,
             canInteract = function()
                 return  onDuty and carout and not balik
@@ -293,60 +321,42 @@ AddEventHandler('onResourceStop', function(resourceName)
 end)
 
 
-lib.registerContext({
-  id = 'GoPostalStartJobMenu',
-  title = 'GoPostal Menu',
-  options = {
-    {
-      title = 'Začít rozvážet lidem',
-      description = '',
-      icon = 'money',
-      arrow = true,
-    }
-  }
+
+
+local boxik = exports.ox_target:addBoxZone({
+    coords = vec3(62.0532, 118.9520, 79.1088),
+    size = vec3(2, 2, 2),
+    rotation = 45,
+    debug = Config.Debug,
+    options = {{
+                label = 'Předat balík',
+                icon = 'fa-solid fa-box',
+              canInteract = function()
+                  return  onDuty and carout and  balik
+              end,
+              onSelect =  function(data)
+                   exports.ox_target:disableTargeting(true)
+                     FreezeEntityPosition(PlayerPedId(), true)
+                     balik = false
+                     BoxCount = BoxCount - 1
+                      lib.progressBar({
+                          duration = 2000,
+                          label = 'Předáváš balík',
+                          useWhileDead = false,
+                          canCancel = false,
+                          disable = {
+                              car = true,
+                          },
+                          anim = {
+                              dict = 'mini@repair',
+                              clip = 'fixing_a_ped'
+                          },
+                      })
+                      FreezeEntityPosition(PlayerPedId(), false)
+                      exports.ox_target:disableTargeting(false)
+                      DeleteEntity(boxProp)
+                      TriggerServerEvent("HS-GoPostalJob:AddMoney")
+                 end,
+                 distance = 2.3
+    }}
 })
-
-
-local OptionsPredatBalik = {
-        {
-            label = 'Předat balík',
-            icon = 'fa-solid fa-box',
-            distance = 1.0,
-            canInteract = function()
-                return  onDuty and carout and  balik
-            end,
-           onSelect =  function(data)
-                exports.ox_target:disableTargeting(true)
-                  FreezeEntityPosition(PlayerPedId(), true)
-                  balik = false
-                  BoxCount = BoxCount - 1
-                   lib.progressBar({
-                       duration = 2000,
-                       label = 'Předáváš balík',
-                       useWhileDead = false,
-                       canCancel = false,
-                       disable = {
-                           car = true,
-                       },
-                       anim = {
-                           dict = 'mini@repair',
-                           clip = 'fixing_a_ped'
-                       },
-                   })
-                   FreezeEntityPosition(PlayerPedId(), false)
-                   exports.ox_target:disableTargeting(false)
-                   DeleteEntity(boxProp)
-              end
-        },
-}
-
-CreateThread(function()
-    for k, v in pairs(Config.Locations) do
-        exports.ox_target:addSphereZone({
-            coords = v.coords,
-            radius = v.radius,
-            debug = Config.Debug,
-            options = OptionsPredatBalik,
-         })
-    end
-end)
