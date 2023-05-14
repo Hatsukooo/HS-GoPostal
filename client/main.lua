@@ -129,7 +129,7 @@ local OptionsDuty = {
 Citizen.CreateThread(function()
 lib.registerContext({
   id = 'GoPostalStartJobMenu',
-  title = 'GoPostal Menu',
+  title = locale('GoPostalMenuLabel'),
   options = {
     {
     groups = Config.JobName,
