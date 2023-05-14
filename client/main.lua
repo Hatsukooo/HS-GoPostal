@@ -1,5 +1,5 @@
-local onDuty = true
-local carout = true
+local onDuty = false
+local carout = false
 local balik = false
 local rozvoz = false
 local DeliveryZone = nil
@@ -38,9 +38,12 @@ function SpawnVehicle(model)
         SetVehicleOnGroundProperly(vehicle)
         exports['okokNotify']:Alert(locale('NotifyTitle'), locale('JobVehOut'), 2500, 'info')
         Debug("Spawned vehicle with net ID: " .. tostring(NetworkGetNetworkIdFromEntity(vehicle)))
+         carout = true
         return true
+
     else
         Debug("Failed to spawn vehicle.")
+         carout = false
         return false
     end
 end
@@ -55,7 +58,6 @@ local OptionsCar = {
                 return onDuty and not carout
             end,
            onSelect =  function(data)
-           carout = true
            SpawnVehicle('speedo4')
            end
         },
@@ -198,9 +200,10 @@ local OptionsToCar = {
                                DeleteEntity(boxProp)
                                BoxCount = BoxCount + 1
                                Debug(BoxCount)
-                               lib.showTextUI(locale('have_boxes', BoxCount))
-                                FreezeEntityPosition(PlayerPedId(), false)
+                               lib.showTextUI(locale('have_boxes', BoxCount), {icon = 'box', style = { backgroundColor = '#ad3818', color = 'white', borderRadius = 20,}})
+                              FreezeEntityPosition(PlayerPedId(), false)
                                 exports.ox_target:disableTargeting(false)
+
             end
         },
         {
@@ -232,7 +235,7 @@ local OptionsToCar = {
                                        BoxCount = BoxCount - 1
                                        Debug(BoxCount)
                                        balik = true
-                                       lib.showTextUI(locale('have_boxes', BoxCount))
+                                      lib.showTextUI(locale('have_boxes', BoxCount), {icon = 'box', style = { backgroundColor = '#ad3818', color = 'white', borderRadius = 20,}})
                                        FreezeEntityPosition(PlayerPedId(), false)
                                       lib.requestAnimDict('anim@heists@box_carry@', 1000)
                                        TaskPlayAnim(PlayerPedId(), 'anim@heists@box_carry@', 'idle', 2.0, 2.5, -1, 49, 0, 0, 0, 0)
@@ -243,17 +246,17 @@ local OptionsToCar = {
                     end
                 },
                 {
-                                    label = 'GoPostal Menu',
-                                    icon = 'fa-solid fa-user',
-                                    distance = 1.0,
-                                    groups = 'gopostal',
-                                    canInteract = function()
-                                         return  onDuty and carout and  not balik
-                                    end,
-                                    onSelect = function(data)
-                                         lib.showContext("GoPostalStartJobMenu")
-                                    end
-                                }
+                    label = 'GoPostal Menu',
+                    icon = 'fa-solid fa-user',
+                    distance = 1.0,
+                    groups = 'gopostal',
+                    canInteract = function()
+                         return  onDuty and carout and  not balik and BoxCount > 0
+                    end,
+                    onSelect = function(data)
+                         lib.showContext("GoPostalStartJobMenu")
+                    end
+                }
 }
 
 local OptionsVzitBalik = {
@@ -329,62 +332,80 @@ AddEventHandler('onResourceStop', function(resourceName)
  RemoveBlip(blip)
 end)
 
-
 function StartDeliveryJob()
 
 local randomIndex = math.random(1, #Config.Locations)
-    local randomLocation = Config.Locations[randomIndex]
+local randomLocation = Config.Locations[randomIndex]
 
-    local blip = AddBlipForCoord(randomLocation)
-    SetBlipSprite(blip, 1)
-    SetBlipColour(blip, 3)
-    SetBlipRoute(blip, true)
-   exports.ox_target:addBoxZone({
-   id = "balik",
-    coords = randomLocation,
-    size = vec3(2, 2, 2),
-    rotation = 45,
-    debug = Config.Debug,
-    options = {{
-                 name = 'balik',
-                label = 'Předat balík',
-                icon = 'fa-solid fa-box',
-                canInteract = function()
-                    return  onDuty and carout and  balik
-                end,
-              onSelect =  function(data)
-                   exports.ox_target:disableTargeting(true)
+            local blip = AddBlipForCoord(randomLocation)
+            SetBlipSprite(blip, 1)
+            SetBlipColour(blip, 3)
+            SetBlipRoute(blip, true)
+                local pedModel = GetHashKey(Config.PedList[math.random(#Config.PedList)])
+                if not IsModelValid(pedModel) or not IsModelAPed(pedModel) then
+                    print("Invalid model")
+                    return
+                end
+                RequestModel(pedModel)
+                while not HasModelLoaded(pedModel) do
+                    Wait(1)
+                end
+                local ped = CreatePed(4, pedModel, randomLocation.x, randomLocation.y, randomLocation.z, randomLocation.h, 1, 1)
+                SetPedRandomComponentVariation(ped, true)
+                SetModelAsNoLongerNeeded(pedModel)
+               FreezeEntityPosition(ped, true)
+               SetEntityInvincible(ped, true)
+               SetBlockingOfNonTemporaryEvents(ped, true)
+
+   balicek = exports.ox_target:addSphereZone({
+       coords = vec3(randomLocation.x, randomLocation.y, randomLocation.z + 1.0),
+       radius = 0.9,
+       debug = Config.Debug,
+       options = {{
+                    name = 'balik',
+                   label = 'Předat balík',
+                   icon = 'fa-solid fa-box',
+                   canInteract = function()
+                       return  onDuty and carout and  balik
+                   end,
+                 onSelect = function(data)
+                     exports.ox_target:disableTargeting(true)
                      FreezeEntityPosition(PlayerPedId(), true)
                      balik = false
                      Debug(BoxCount)
-                      lib.progressBar({
-                          duration = 2000,
-                          label = 'Předáváš balík',
-                          useWhileDead = false,
-                          canCancel = false,
-                          disable = {
-                              car = true,
-                          },
-                          anim = {
-                              dict = 'mini@repair',
-                              clip = 'fixing_a_ped'
-                          },
-                      })
-                      FreezeEntityPosition(PlayerPedId(), false)
-                      exports.ox_target:disableTargeting(false)
-                      DeleteEntity(boxProp)
-                      TriggerServerEvent("HS-GoPostalJob:AddMoney")
-                      RemoveBlip(blip)
-                      if BoxCount >= 1 then
-                      Debug(BoxCount)
-                      StartDeliveryJob()
-                      exports.ox_target:removeZone("balik")
-                      exports['okokNotify']:Alert(locale('NotifyTitle'), "Na mapě máš nového zákazníka", 2500, 'info')
-                      end
-                      exports.ox_target:removeZone("balik")
-                 end,
-                 distance = 2.3
-    }}
-})
-end
+                     lib.progressBar({
+                         duration = 2000,
+                         label = 'Předáváš balík',
+                         useWhileDead = false,
+                         canCancel = false,
+                         disable = {
+                             car = true,
+                         },
+                        anim = {
+                                    dict = 'mp_common',
+                                    clip = 'givetake1_b',
+                                },
+                     })
+                     DeleteEntity(ped)
+                     DeleteEntity(boxProp)
+                     RemoveBlip(blip)
+                     exports.ox_target:removeZone(data.zone)
 
+                     if BoxCount >= 1 then
+                         Debug(BoxCount)
+                         Wait(500)
+                         exports['okokNotify']:Alert(locale('NotifyTitle'), "Na mapě máš nového zákazníka", 2500, 'info')
+                         StartDeliveryJob()
+                     end
+                     if BoxCount < 1 then
+                         exports['okokNotify']:Alert(locale('NotifyTitle'), "Nemáš už žádné balíčky, vrať se do depa a vyzvedni další balíčky", 2500, 'info')
+                     end
+
+                     FreezeEntityPosition(PlayerPedId(), false)
+                     exports.ox_target:disableTargeting(false)
+                 end,
+                    distance = 2.3
+       }}
+   })
+
+end
