@@ -2,6 +2,7 @@ local onDuty = true
 local carout = true
 local balik = false
 local rozvoz = false
+local DeliveryZone = nil
 local BoxCount = 0
 ESX = exports["es_extended"]:getSharedObject()
 lib.locale()
@@ -137,11 +138,12 @@ lib.registerContext({
       onSelect = function()
         if not rozvoz then
         if BoxCount > 0  then
-        rozvoz = true
-        exports['okokNotify']:Alert(locale('NotifyTitle'), "Začal jsi rozvážet balíčky", 2500, 'info')
-
-        else
-        exports['okokNotify']:Alert(locale('NotifyTitle'), "Nemáš v kufru dostatek balíčků", 2500, 'error')
+        Debug(BoxCount)
+            rozvoz = true
+            StartDeliveryJob()
+            exports['okokNotify']:Alert(locale('NotifyTitle'), "Začal jsi rozvážet balíčky, na mapě nalezneš lokaci kam se máš dostat", 2500, 'info')
+            else
+            exports['okokNotify']:Alert(locale('NotifyTitle'), "Nemáš v kufru dostatek balíčků", 2500, 'error')
         end
         end
        end
@@ -152,10 +154,14 @@ lib.registerContext({
           icon = 'fa-money-bill',
           arrow = true,
                 onSelect = function()
-                    if rozvoz and BoxCount == 0  then
+                    if rozvoz then
+                    if BoxCount < 1  then
+                    Debug(BoxCount)
                      rozvoz = false
                      exports['okokNotify']:Alert(locale('NotifyTitle'), "Přestal jsi rozvážet balíčky", 2500, 'info')
+                       lib.hideTextUI()
                      else  exports['okokNotify']:Alert(locale('NotifyTitle'), "Nemůžeš přestat rozvážet, v kufru máš ještě nějaké balíčky ty pako", 2500, 'warning')
+                    end
                     end
                  end
         }
@@ -191,6 +197,7 @@ local OptionsToCar = {
                                })
                                DeleteEntity(boxProp)
                                BoxCount = BoxCount + 1
+                               Debug(BoxCount)
                                lib.showTextUI(locale('have_boxes', BoxCount))
                                 FreezeEntityPosition(PlayerPedId(), false)
                                 exports.ox_target:disableTargeting(false)
@@ -202,9 +209,10 @@ local OptionsToCar = {
                     distance = 1.0,
                     groups = 'gopostal',
                     canInteract = function()
-                         return  onDuty and carout and  not balik and BoxCount ~=0
+                         return  onDuty and carout and  not balik and BoxCount > 0
                     end,
                     onSelect = function(data)
+                    Debug(BoxCount)
                          balik = false
                          FreezeEntityPosition(PlayerPedId(), true)
                          exports.ox_target:disableTargeting(true)
@@ -222,6 +230,7 @@ local OptionsToCar = {
                                            },
                                        })
                                        BoxCount = BoxCount - 1
+                                       Debug(BoxCount)
                                        balik = true
                                        lib.showTextUI(locale('have_boxes', BoxCount))
                                        FreezeEntityPosition(PlayerPedId(), false)
@@ -310,7 +319,6 @@ local bratbalickydoauta   = exports.ox_target:addBoxZone({
     options = OptionsVzitBalik
 })
 
-
 AddEventHandler('onResourceStop', function(resourceName)
   if (GetCurrentResourceName() ~= resourceName) then
     return
@@ -318,27 +326,37 @@ AddEventHandler('onResourceStop', function(resourceName)
   DeleteEntity(boxProp)
   lib.hideTextUI()
   BoxCount = 0
+ RemoveBlip(blip)
 end)
 
 
+function StartDeliveryJob()
 
+local randomIndex = math.random(1, #Config.Locations)
+    local randomLocation = Config.Locations[randomIndex]
 
-local boxik = exports.ox_target:addBoxZone({
-    coords = vec3(62.0532, 118.9520, 79.1088),
+    local blip = AddBlipForCoord(randomLocation)
+    SetBlipSprite(blip, 1)
+    SetBlipColour(blip, 3)
+    SetBlipRoute(blip, true)
+   exports.ox_target:addBoxZone({
+   id = "balik",
+    coords = randomLocation,
     size = vec3(2, 2, 2),
     rotation = 45,
     debug = Config.Debug,
     options = {{
+                 name = 'balik',
                 label = 'Předat balík',
                 icon = 'fa-solid fa-box',
-              canInteract = function()
-                  return  onDuty and carout and  balik
-              end,
+                canInteract = function()
+                    return  onDuty and carout and  balik
+                end,
               onSelect =  function(data)
                    exports.ox_target:disableTargeting(true)
                      FreezeEntityPosition(PlayerPedId(), true)
                      balik = false
-                     BoxCount = BoxCount - 1
+                     Debug(BoxCount)
                       lib.progressBar({
                           duration = 2000,
                           label = 'Předáváš balík',
@@ -356,7 +374,17 @@ local boxik = exports.ox_target:addBoxZone({
                       exports.ox_target:disableTargeting(false)
                       DeleteEntity(boxProp)
                       TriggerServerEvent("HS-GoPostalJob:AddMoney")
+                      RemoveBlip(blip)
+                      if BoxCount >= 1 then
+                      Debug(BoxCount)
+                      StartDeliveryJob()
+                      exports.ox_target:removeZone("balik")
+                      exports['okokNotify']:Alert(locale('NotifyTitle'), "Na mapě máš nového zákazníka", 2500, 'info')
+                      end
+                      exports.ox_target:removeZone("balik")
                  end,
                  distance = 2.3
     }}
 })
+end
+
