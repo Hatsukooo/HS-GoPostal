@@ -405,7 +405,8 @@ local randomLocation = Config.Locations[randomIndex]
                          StartDeliveryJob()
                      end
                      if BoxCount < 1 then
-                         exports['okokNotify']:Alert(locale('NotifyTitle'), locale('NoMailInVan'), 5000, 'info')
+                     lib.hideTextUI()
+                     exports['okokNotify']:Alert(locale('NotifyTitle'), locale('NoMailInVan'), 5000, 'info')
                      end
                      FreezeEntityPosition(PlayerPedId(), false)
                      exports.ox_target:disableTargeting(false)
