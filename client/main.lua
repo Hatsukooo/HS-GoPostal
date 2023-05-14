@@ -23,16 +23,15 @@ function SpawnVehicle(model)
         Debug("Invalid model.")
         return
     end
-    local spawnCoords = vector3(-974.3779, -1962.1353, 13.1916)
-    local heading = 317.0751
-    if IsAnyVehicleNearPoint(spawnCoords, 5.0) then
+    local heading = Config.VehicleSpawnHeading
+    if IsAnyVehicleNearPoint(Config.VehicleSpawnPoint.x,Config.VehicleSpawnPoint.y,Config.VehicleSpawnPoint.z, 5.0) then
         return exports['okokNotify']:Alert(locale('NotifyTitle'), locale('SpawnPointOccupied'), 2500, 'warning')
     end
     RequestModel(hash)
     while not HasModelLoaded(hash) do
         Citizen.Wait(0)
     end
-    local vehicle = CreateVehicle(hash, spawnCoords.x, spawnCoords.y, spawnCoords.z, heading, true, false)
+    local vehicle = CreateVehicle(hash, Config.VehicleSpawnPoint.x, Config.VehicleSpawnPoint.y, Config.VehicleSpawnPoint.z, Config.VehicleSpawnPoint.w, true, false)
     if DoesEntityExist(vehicle) then
         SetVehicleEngineOn(vehicle, true, true)
         SetVehicleOnGroundProperly(vehicle)
@@ -52,7 +51,7 @@ local OptionsCar = {
         {
             label = 'Vyparkovat služební vozidlo',
             icon = 'fa-solid fa-car',
-            groups = 'gopostal',
+            groups = Config.JobName,
             distance = 1.0,
             canInteract = function()
                 return onDuty and not carout
@@ -64,7 +63,7 @@ local OptionsCar = {
         {
             label = 'Zaparkovat služební vozidlo',
             icon = 'fa-solid fa-car',
-            groups = 'gopostal',
+            groups = Config.JobName,
             distance = 1.0,
             canInteract = function()
                 return onDuty and carout
@@ -78,9 +77,9 @@ local OptionsCar = {
 
 local OptionsDuty = {
         {
-            label = 'Jít do služby',
+            label = locale('GoInDuty'),
             icon = 'fa-solid fa-user',
-            groups = 'gopostal',
+            groups = Config.JobName,
             distance = 1.0,
             canInteract = function()
                 return not onDuty
@@ -88,8 +87,8 @@ local OptionsDuty = {
             onSelect = function(data)
             FreezeEntityPosition(PlayerPedId(), true)
                 lib.progressBar({
-                    duration = 2500,
-                    label = 'Zapisuješ se do služby',
+                    duration = Config.GlobalProgBarDur,
+                    label = locale('SigningOnDuty'),
                     useWhileDead = false,
                     canCancel = false,
                     disable = {
@@ -103,8 +102,8 @@ local OptionsDuty = {
         },
         {
             icon = 'fa-solid fa-user',
-            label = 'Odejít ze služby',
-            groups = 'gopostal',
+            label = locale('GoOffDuty'),
+            groups = Config.JobName,
             distance = 1.0,
             canInteract = function()
                 return onDuty
@@ -112,8 +111,8 @@ local OptionsDuty = {
             onSelect = function(data)
                 FreezeEntityPosition(PlayerPedId(), true)
                     lib.progressBar({
-                        duration = 2500,
-                        label = 'Zapisuješ si odchod ze služby',
+                        duration = Config.GlobalProgBarDur,
+                        label = locale('SigningOffDuty'),
                         useWhileDead = false,
                         canCancel = false,
                         disable = {
@@ -133,8 +132,9 @@ lib.registerContext({
   title = 'GoPostal Menu',
   options = {
     {
-      title = 'Začít rozvážet lidem',
-      description = 'Rozvážej balíčky a vydělej si nějaký ten drobák',
+    groups = Config.JobName,
+      title = locale('StartDeliver'),
+      description = locale('StartDeliverDescription'),
       icon = 'fa-money-bill',
       arrow = true,
       onSelect = function()
@@ -143,16 +143,17 @@ lib.registerContext({
         Debug(BoxCount)
             rozvoz = true
             StartDeliveryJob()
-            exports['okokNotify']:Alert(locale('NotifyTitle'), "Začal jsi rozvážet balíčky, na mapě nalezneš lokaci kam se máš dostat", 2500, 'info')
+            exports['okokNotify']:Alert(locale('NotifyTitle'), locale('StartDeliverNotification'), 2500, 'info')
             else
-            exports['okokNotify']:Alert(locale('NotifyTitle'), "Nemáš v kufru dostatek balíčků", 2500, 'error')
+            exports['okokNotify']:Alert(locale('NotifyTitle'), locale('NotEnoughMail'), 2500, 'error')
         end
         end
        end
     },
         {
-          title = 'Přestat rozvážet lidem',
-          description = '',
+        groups = Config.JobName,
+      title = locale('StopDeliver'),
+      description = locale('StopDeliverDescription'),
           icon = 'fa-money-bill',
           arrow = true,
                 onSelect = function()
@@ -160,9 +161,10 @@ lib.registerContext({
                     if BoxCount < 1  then
                     Debug(BoxCount)
                      rozvoz = false
-                     exports['okokNotify']:Alert(locale('NotifyTitle'), "Přestal jsi rozvážet balíčky", 2500, 'info')
+                     exports['okokNotify']:Alert(locale('NotifyTitle'), locale('StopDeliverNotification'), 2500, 'info')
                        lib.hideTextUI()
-                     else  exports['okokNotify']:Alert(locale('NotifyTitle'), "Nemůžeš přestat rozvážet, v kufru máš ještě nějaké balíčky ty pako", 2500, 'warning')
+                     else
+                      exports['okokNotify']:Alert(locale('NotifyTitle'), locale('MailStillInTrunk'), 2500, 'warning')
                     end
                     end
                  end
@@ -173,9 +175,9 @@ end)
 
 local OptionsToCar = {
         {
-            label = 'Vložit Balíček do vozidla',
+            label = locale('PutMailToCar'),
             icon = 'fa-solid fa-box',
-            groups = 'gopostal',
+            groups = Config.JobName,
             distance = 1.0,
             canInteract = function()
                  return  onDuty and carout and  balik
@@ -185,8 +187,8 @@ local OptionsToCar = {
                  exports.ox_target:disableTargeting(true)
                  FreezeEntityPosition(PlayerPedId(), true)
                  lib.progressBar({
-                                   duration = 2000,
-                                   label = 'Vkládáš balíček do vozidla',
+                                   duration = Config.GlobalProgBarDur,
+                                   label = locale('PuttingMailIn'),
                                    useWhileDead = false,
                                    canCancel = false,
                                    disable = {
@@ -200,17 +202,19 @@ local OptionsToCar = {
                                DeleteEntity(boxProp)
                                BoxCount = BoxCount + 1
                                Debug(BoxCount)
+                               if not balik then
                                lib.showTextUI(locale('have_boxes', BoxCount), {icon = 'box', style = { backgroundColor = '#ad3818', color = 'white', borderRadius = 20,}})
+                               end
                               FreezeEntityPosition(PlayerPedId(), false)
-                                exports.ox_target:disableTargeting(false)
+                              exports.ox_target:disableTargeting(false)
 
             end
         },
         {
-                    label = 'Vybrat Balíček z vozidla',
+                    label = locale('TakeMailOutOfCar'),
                     icon = 'fa-solid fa-box',
                     distance = 1.0,
-                    groups = 'gopostal',
+                    groups = Config.JobName,
                     canInteract = function()
                          return  onDuty and carout and  not balik and BoxCount > 0
                     end,
@@ -220,8 +224,8 @@ local OptionsToCar = {
                          FreezeEntityPosition(PlayerPedId(), true)
                          exports.ox_target:disableTargeting(true)
                          lib.progressBar({
-                                           duration = 2000,
-                                           label = 'Bereš balíček z vozidla',
+                                           duration = Config.GlobalProgBarDur,
+                                           label = locale('CollectingFromCar'),
                                            useWhileDead = false,
                                            canCancel = false,
                                            disable = {
@@ -235,21 +239,24 @@ local OptionsToCar = {
                                        BoxCount = BoxCount - 1
                                        Debug(BoxCount)
                                        balik = true
-                                      lib.showTextUI(locale('have_boxes', BoxCount), {icon = 'box', style = { backgroundColor = '#ad3818', color = 'white', borderRadius = 20,}})
                                        FreezeEntityPosition(PlayerPedId(), false)
-                                      lib.requestAnimDict('anim@heists@box_carry@', 1000)
+                                       lib.requestAnimDict('anim@heists@box_carry@', 1000)
                                        TaskPlayAnim(PlayerPedId(), 'anim@heists@box_carry@', 'idle', 2.0, 2.5, -1, 49, 0, 0, 0, 0)
                                        lib.requestModel('prop_cs_cardbox_01', 1000)
                                        boxProp = CreateObject(GetHashKey('prop_cs_cardbox_01'), x, y, z, true, true, true)
                                        AttachEntityToEntity(boxProp, PlayerPedId(), GetPedBoneIndex(PlayerPedId(), 0x60F2), -0.1, 0.4, 0, 0, 90.0, 0, true, true, false, true, 5, true)
                                        exports.ox_target:disableTargeting(false)
-                    end
+                                       DropPackage()
+                                       if not balik then
+                                        lib.showTextUI(locale('have_boxes', BoxCount), {icon = 'box', style = { backgroundColor = '#ad3818', color = 'white', borderRadius = 20,}})
+                                       end
+end
                 },
                 {
-                    label = 'GoPostal Menu',
+                    label = locale('GoPostalMenuLabel'),
                     icon = 'fa-solid fa-user',
                     distance = 1.0,
-                    groups = 'gopostal',
+                    groups = Config.JobName,
                     canInteract = function()
                          return  onDuty and carout and  not balik and BoxCount > 0
                     end,
@@ -261,9 +268,9 @@ local OptionsToCar = {
 
 local OptionsVzitBalik = {
         {
-            label = 'Vzít balík',
+            label = locale('TakeMail'),
             icon = 'fa-solid fa-box',
-            groups = 'gopostal',
+            groups = Config.JobName,
             distance = 1.0,
             canInteract = function()
                 return  onDuty and carout and not balik
@@ -273,8 +280,8 @@ local OptionsVzitBalik = {
               balik = true
                FreezeEntityPosition(PlayerPedId(), true)
               lib.progressBar({
-                  duration = 2000,
-                  label = 'Přebíráš balík',
+                  duration = Config.TMProgressDur,
+                  label = locale('TakingMail'),
                   useWhileDead = false,
                   canCancel = false,
                   disable = {
@@ -292,6 +299,7 @@ local OptionsVzitBalik = {
                       boxProp = CreateObject(GetHashKey('prop_cs_cardbox_01'), x, y, z, true, true, true)
                       AttachEntityToEntity(boxProp, PlayerPedId(), GetPedBoneIndex(PlayerPedId(), 0x60F2), -0.1, 0.4, 0, 0, 90.0, 0, true, true, false, true, 5, true)
                       exports.ox_target:disableTargeting(false)
+                      DropPackage()
               end
         },
 }
@@ -299,24 +307,24 @@ local OptionsVzitBalik = {
 local BalikDoAuta = exports.ox_target:addGlobalVehicle(OptionsToCar)
 
 local duty   = exports.ox_target:addBoxZone({
-    coords = vec3(-961.7448, -1981.4221, 14.4753),
-    size = vec3(2, 2, 2),
+    coords = Config.DutyNPCCoords,
+    size = Config.DutyBoxSize,
     rotation = 45,
     debug = Config.Debug,
     options = OptionsDuty
 })
 
 local carspawn   = exports.ox_target:addBoxZone({
-    coords = vec3(-978.5880, -1963.8387, 13.1916),
-    size = vec3(2, 2, 2),
+    coords = Config.VehicleSpawnNPCCoords,
+    size = Config.VSBoxSize,
     rotation = 45,
     debug = Config.Debug,
     options = OptionsCar
 })
 
 local bratbalickydoauta   = exports.ox_target:addBoxZone({
-    coords = vec3(68.9645, 127.8391, 79.6131),
-    size = vec3(2, 16, 3),
+    coords = Config.TakeMailCoords,
+    size = Config.TMBoxSize,
     rotation = 70,
     debug = Config.Debug,
     options = OptionsVzitBalik
@@ -326,10 +334,10 @@ AddEventHandler('onResourceStop', function(resourceName)
   if (GetCurrentResourceName() ~= resourceName) then
     return
   end
-  DeleteEntity(boxProp)
-  lib.hideTextUI()
-  BoxCount = 0
- RemoveBlip(blip)
+    DeleteEntity(boxProp)
+    lib.hideTextUI()
+    BoxCount = 0
+    RemoveBlip(blip)
 end)
 
 function StartDeliveryJob()
@@ -343,7 +351,7 @@ local randomLocation = Config.Locations[randomIndex]
             SetBlipRoute(blip, true)
                 local pedModel = GetHashKey(Config.PedList[math.random(#Config.PedList)])
                 if not IsModelValid(pedModel) or not IsModelAPed(pedModel) then
-                    print("Invalid model")
+                    Debug("Invalid model")
                     return
                 end
                 RequestModel(pedModel)
@@ -362,8 +370,8 @@ local randomLocation = Config.Locations[randomIndex]
        radius = 0.9,
        debug = Config.Debug,
        options = {{
-                    name = 'balik',
-                   label = 'Předat balík',
+       groups = Config.JobName,
+                   label = locale('GiveMail'),
                    icon = 'fa-solid fa-box',
                    canInteract = function()
                        return  onDuty and carout and  balik
@@ -374,8 +382,8 @@ local randomLocation = Config.Locations[randomIndex]
                      balik = false
                      Debug(BoxCount)
                      lib.progressBar({
-                         duration = 2000,
-                         label = 'Předáváš balík',
+                         duration = Config.TMProgressDur,
+                         label = locale('givingmail'),
                          useWhileDead = false,
                          canCancel = false,
                          disable = {
@@ -390,17 +398,15 @@ local randomLocation = Config.Locations[randomIndex]
                      DeleteEntity(boxProp)
                      RemoveBlip(blip)
                      exports.ox_target:removeZone(data.zone)
-
                      if BoxCount >= 1 then
                          Debug(BoxCount)
-                         Wait(500)
-                         exports['okokNotify']:Alert(locale('NotifyTitle'), "Na mapě máš nového zákazníka", 2500, 'info')
+                         Wait(2500)
+                         exports['okokNotify']:Alert(locale('NotifyTitle'), locale('NewDest'), 5000, 'info')
                          StartDeliveryJob()
                      end
                      if BoxCount < 1 then
-                         exports['okokNotify']:Alert(locale('NotifyTitle'), "Nemáš už žádné balíčky, vrať se do depa a vyzvedni další balíčky", 2500, 'info')
+                         exports['okokNotify']:Alert(locale('NotifyTitle'), locale('NoMailInVan'), 5000, 'info')
                      end
-
                      FreezeEntityPosition(PlayerPedId(), false)
                      exports.ox_target:disableTargeting(false)
                  end,
@@ -409,3 +415,18 @@ local randomLocation = Config.Locations[randomIndex]
    })
 
 end
+
+function DropPackage()
+lib.showTextUI(locale('ToDropBox'), {icon = 'hand', position = "right-center", style = { backgroundColor = '#5f8ab7', color = 'white', borderRadius = 20,}})
+   while balik do
+        Wait(0)
+            if IsControlJustReleased(0, Config.KeyToDropBox) then
+                    DeleteEntity(boxProp)
+                    balik = false
+                    lib.hideTextUI()
+                    ClearPedTasks(PlayerPedId())
+                    exports['okokNotify']:Alert(locale('NotifyTitle'), locale('BoxDropped'), 5000, 'info')
+            end
+        end
+end
+

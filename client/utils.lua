@@ -29,5 +29,3 @@ Citizen.CreateThread(function()
  					color = 2,
  					})
 end)
-
-
