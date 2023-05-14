@@ -27,10 +27,11 @@
  "StopDeliverDescription": "",
  "StopDeliverNotification": "You have ended your shift, go return job vehicle",
  "NotEnoughMail": "You dont have enough mail in your truck",
- "MailStillInTrunk": "You still have some mail in your car, deliver it and then you can end you shift,",
- "PutMailToCar": "Put mail into the car,",
+ "MailStillInTrunk": "You still have some mail in your car, deliver it and then you can end you shift",
+ "PutMailToCar": "Put mail into the car",
  "TakeMailOutOfCar": "Take out mail from the car",
  "CollectingFromCar": "Taking mail out of the car",
  "GoPostalMenuLabel": "GoPostal Shift Menu",
- "PuttingMailIn": "Putting mail into the car"
+ "PuttingMailIn": "Putting mail into the car",
+ "TakeOutJobVeh": "Take out job vehicle"
 }

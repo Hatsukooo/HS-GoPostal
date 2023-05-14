@@ -49,7 +49,7 @@ end
 
 local OptionsCar = {
         {
-            label = 'Vyparkovat služební vozidlo',
+            label = locale('TakeOutJobVeh')'Vyparkovat služební vozidlo',
             icon = 'fa-solid fa-car',
             groups = Config.JobName,
             distance = 1.0,

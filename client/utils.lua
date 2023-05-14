@@ -4,6 +4,13 @@ function Debug(msg)
     end
 end
 
+Citizen.CreateThread(function()
+     CreatePeds()
+        if Config.EnableBlip then
+            CreateBlip()
+        end
+end)
+
 function CreatePeds()
     for i=1, #Config.PedSpawn do
         local model = GetHashKey(Config.PedSpawn[i].model)
@@ -20,12 +27,14 @@ function CreatePeds()
     end
 end
 
-Citizen.CreateThread(function()
- CreatePeds()
- exports['blips']:addBlip('delivblip', 'GoPostal Sídlo', vec3(90.7632, 130.9322, 116.7332),{
- 					blip = 441,
- 					type = 4,
- 					scale = 1.0,
- 					color = 2,
- 					})
-end)
+function CreateBlip()
+    local blip = AddBlipForCoord(Config.BlipCoords)
+    SetBlipSprite(blip, Config.BlipSripte)
+    SetBlipColour(blip, Config.BlipColour)
+    SetBlipScale(blip, Config.BlipSize)
+    SetBlipAsShortRange(blip, true)
+    BeginTextCommandSetBlipName("STRING")
+    AddTextComponentString(Config.BlipText)
+    EndTextCommandSetBlipName(blip)
+    return blip
+end

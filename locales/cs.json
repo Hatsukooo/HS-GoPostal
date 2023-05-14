@@ -28,9 +28,10 @@
   "StopDeliverNotification": "Ukončili jste směnu, vraťte pracovní vozidlo",
   "NotEnoughMail": "Nemáte ve vozidle dostatek pošty pro početí rozvozu",
   "MailStillInTrunk": "V autě máte ještě nějakou poštu, doručte ji a potom můžete ukončit směnu",
-  "PutMailToCar": "Vložit poštu do auta,",
+  "PutMailToCar": "Vložit poštu do auta",
   "TakeMailOutOfCar": "Vybrat poštu z auta",
   "CollectingFromCar": "Vybírání pošty z auta",
   "GoPostalMenuLabel": "GoPostal  Menu",
-  "PuttingMailIn": "Vkládáš poštu do vozu"
+  "PuttingMailIn": "Vkládáš poštu do vozu",
+  "TakeOutJobVeh": "Vyparkovat firemní vozidlo"
 }

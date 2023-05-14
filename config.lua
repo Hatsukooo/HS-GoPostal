@@ -53,39 +53,9 @@ Config.Locations = {
         "a_m_m_genfat_01",
     }
 
-
-function N(text, type)
-    if Config.NotificationType == "ESX" then
-        ESX.ShowNotification(text)
-    elseif Config.NotificationType == "ox_lib" then
-        if type == "1" then
-            lib.notify({
-                title = locale('NotifyTitle'),
-                description = text,
-                type = "inform"
-            })
-        elseif type == "2" then
-            lib.notify({
-                title = locale('NotifyTitle'),
-                description = text,
-                type = "error"
-            })
-        elseif type == "3" then
-            lib.notify({
-                title = locale('NotifyTitle'),
-                description = text,
-                type = "success"
-            })
-    elseif Config.NotificationType == "okokNotify" then
-        if type == "1" then
-        exports['okokNotify']:Alert(locale('NotifyTitle'), text, 5000, 'info')
-        elseif type == "2" then
-        exports['okokNotify']:Alert(locale('NotifyTitle'), text, 5000, 'success')
-        elseif type == "3" then
-        exports['okokNotify']:Alert(locale('NotifyTitle'), text, 5000, 'error')
-        elseif Config.NotificationType == "custom" then
-            print("add your notification system! in utils.lua")
-        end
-    end
-end
-end
+Config.EnableBlip = true
+Config.BlipCoords = vec3(90.7632, 130.9322, 116.7332)
+Config.BlipSripte = 501
+Config.BlipColour = 2
+Config.BlipSize = 1.0
+Config.BlipText = '<font face ="Rubik">GoPostal</font>'
