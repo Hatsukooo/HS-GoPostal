@@ -70,6 +70,7 @@ local OptionsCar = {
             end,
            onSelect =  function(data)
            carout = false
+           lib.hideTextUI()
            DeleteNearestVehicle()
            end
         },
@@ -122,6 +123,7 @@ local OptionsDuty = {
                     FreezeEntityPosition(PlayerPedId(), false)
                     exports['okokNotify']:Alert(locale('NotifyTitle'), locale('Duty_Off'), 2500, 'info')
                     onDuty = false
+                    lib.hideTextUI()
             end
         }
 }
