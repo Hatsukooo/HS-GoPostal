@@ -33,5 +33,6 @@
  "CollectingFromCar": "Taking mail out of the car",
  "GoPostalMenuLabel": "GoPostal Shift Menu",
  "PuttingMailIn": "Putting mail into the car",
- "TakeOutJobVeh": "Take out job vehicle"
+ "TakeOutJobVeh": "Take out job vehicle",
+ "DeleteJobVeh": "Store job vehicle"
 }

@@ -33,5 +33,6 @@
   "CollectingFromCar": "Vybírání pošty z auta",
   "GoPostalMenuLabel": "GoPostal  Menu",
   "PuttingMailIn": "Vkládáš poštu do vozu",
-  "TakeOutJobVeh": "Vyparkovat firemní vozidlo"
+  "TakeOutJobVeh": "Vyparkovat firemní vozidlo",
+  "DeleteJobVeh": "Zaparkovat firemní vůz"
 }
