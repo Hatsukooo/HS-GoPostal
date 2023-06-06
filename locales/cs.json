@@ -1,11 +1,11 @@
 {
-  "NotifyTitle":" Práce",
-  "GoInDuty": "Přihlásit se do služby",
-  "GoOffDuty": "Přihlásit se mimo službu",
-  "SigningOffDuty": "Zapisuješ se mimo službu",
-  "SigningOnDuty": "Přihlásit se do služby",
-  "Duty_On": "Přihlásili jste se do služby",
-  "Duty_Off": "Přihlásili jste se mimo službu",
+  "NotifyTitle":"GoPostal",
+  "GoInDuty": "Jít do služby",
+  "GoOffDuty": "Jít mimo službu",
+  "SigningOffDuty": "Zapisuješ si odchod",
+  "SigningOnDuty": "Zapisuješ si příchod",
+  "Duty_On": "Zapsal jsi si příchod",
+  "Duty_Off": "Zapsal jsi si odchod",
   "JobVehOut": "Vytáhli jste služební vozidlo, snažte se ho nezničit!",
   "SpawnPointOccupied": "Aktuální spawnpoint je obsazen \n Vykliďte oblast",
   "JobStarted": "Začal jsi směnu! \nJděte na určené místo a vyzvedněte všechny balíčky \n Určené místo najdete na mapě!",
@@ -34,5 +34,6 @@
   "GoPostalMenuLabel": "GoPostal  Menu",
   "PuttingMailIn": "Vkládáš poštu do vozu",
   "TakeOutJobVeh": "Vyparkovat firemní vozidlo",
-  "DeleteJobVeh": "Zaparkovat firemní vůz"
+  "DeleteJobVeh": "Zaparkovat firemní vůz",
+  "Destination": "<font face ='AMSANSL'>Místo odevzdání</font>"
 }
