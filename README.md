@@ -1,4 +1,4 @@
-#  Simple GoPostal Job  1.0 Released
+#  Simple GoPostal Job
 Simple GoPostal Job  Should Work just fine l NONWHITELISTED so everyone can work
 Showcase -  https://youtu.be/DrfYzG90YIU
 SQL  / or you can just edit it for your own job config.lua / JobName
